@@ -64,3 +64,18 @@
 2. ตารางตรวจความครบระบุ task ครบทุก AC (`AC-BKG-01` ถึง `AC-BKG-06`) และ Constraint (`CON-TECH-01`, `DOM-PDPA-01`, `IF-IDP-01`, `IF-HIS-01`, `IF-NOT-01`)
 3. ระบุ task ที่รอ `Q-02` จำนวน 5 task และยังไม่เริ่มทำ task ใด ๆ
 
+---
+## 2569-09-23  คำสั่ง: /implement T-01 specs/001-booking/tasks.md
+
+- เครื่องมือ: Copilot (Codespaces)
+- ไฟล์ที่สร้างหรือแก้: `backend/app/config.py`, `backend/app/db/session.py`, `backend/tests/conftest.py`
+- ผล test: `cd backend && pytest tests/conftest.py -q` ผ่าน `1 passed`
+- สิ่งที่เกือบต้องเดา: ไม่พบสิ่งที่ต้องเดา เพราะ plan ระบุให้ production อ่าน `DATABASE_URL` และใช้ SQLite in-memory ใน test; ยังไม่สร้าง schema เพราะเป็นขอบเขตของ T-02
+
+### ผลลัพธ์
+
+1. สร้างการอ่าน `DATABASE_URL` และตรวจว่าต้องกำหนดค่า
+2. สร้าง SQLAlchemy engine/session factory ที่ยังไม่เปิด connection จนกว่าจะถูกเรียก
+3. สร้าง pytest fixture สำหรับ SQLite in-memory และ smoke test ของ T-01
+4. เปลี่ยนสถานะเฉพาะ T-01 เป็น `เสร็จ รอทีมตรวจ` และยังไม่เริ่ม task ถัดไป
+

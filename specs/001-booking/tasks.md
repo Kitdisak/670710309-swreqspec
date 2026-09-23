@@ -16,7 +16,7 @@ task อื่นสามารถทำต่อได้โดยไม่ต
 - ไฟล์ที่แตะ: `backend/app/config.py`, `backend/app/db/session.py`, `backend/tests/conftest.py`
 - ต้องทำหลัง: ไม่มี
 - เสร็จเมื่อ: ชุดทดสอบสร้าง session ฐานข้อมูล SQLite ในหน่วยความจำได้ และอ่าน `DATABASE_URL` ได้
-- สถานะ: พร้อมทำ
+- สถานะ: เสร็จ รอทีมตรวจ
 
 ### T-02 สร้างตารางและ migration
 - รองรับ: CON-TECH-01, DOM-PDPA-01, IF-HIS-01, FR-BKG-01, FR-BKG-02, FR-BKG-04
