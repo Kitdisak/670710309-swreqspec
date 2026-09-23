@@ -52,3 +52,15 @@
 - Constraint ทั้งหมดใน `spec.md` ถูกนำไปใช้ใน `plan.md` แล้ว
 - ยังคงมี Open Questions ใน `spec.md` (Q-01) ซึ่งจะไม่ดำเนินการจนกว่าจะได้คำตอบ
 
+---
+## 2569-09-23  คำสั่ง: /tasks specs/001-booking/spec.md
+
+- เครื่องมือ: Copilot (Codespaces)
+- ไฟล์: specs/001-booking/spec.md และ specs/001-booking/plan.md
+
+### ผลลัพธ์
+
+1. สร้าง `specs/001-booking/tasks.md` เป็นรายการงาน 19 task เรียงตามการพึ่งพา โดยทุก task อ้างอิง FR/NFR/Constraint/Interface หรือ Open Question ใน spec
+2. ตารางตรวจความครบระบุ task ครบทุก AC (`AC-BKG-01` ถึง `AC-BKG-06`) และ Constraint (`CON-TECH-01`, `DOM-PDPA-01`, `IF-IDP-01`, `IF-HIS-01`, `IF-NOT-01`)
+3. ระบุ task ที่รอ `Q-02` จำนวน 5 task และยังไม่เริ่มทำ task ใด ๆ
+
