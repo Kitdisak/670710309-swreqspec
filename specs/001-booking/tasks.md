@@ -1,191 +1,129 @@
 # Tasks: จองคิวตรวจสุขภาพ (Booking)
+Spec ID: SPEC-BKG-001 (Draft v2) | อ้างอิง: plan.md v1 | สร้างด้วย /tasks เมื่อ 2569-09-23 แก้รอบที่ 1 แล้ว
 
-- Feature: จองคิวตรวจสุขภาพ (Booking)
-- Spec ID: SPEC-BKG-001
-- อ้างอิง: [plan.md](plan.md)
-- วันที่: 2569-09-23
+สรุป: ทั้งหมด 12 task (หลังบ้าน 9 หน้าจอ 3) เสร็จแล้ว 3 task (T-01 ถึง T-03)
+รอ Open Question 1 task (T-06 รอ Q-02)
 
-มีทั้งหมด 19 task โดย 5 task ต้องรอคำตอบ `Q-02` เรื่องรูปแบบและวิธีออกหมายเลขคิว
-task อื่นสามารถทำต่อได้โดยไม่ต้องเดาคำตอบของ Open Question นี้
+---
 
-## รายการงาน
-
-### T-01 เตรียมโครงฐานข้อมูลและชุดทดสอบ
-- รองรับ: CON-TECH-01, IF-HIS-01
-- ตรวจด้วย: ไม่มี AC ตรง ๆ เป็นงานพื้นฐานของ T-02, T-04 และ T-05
-- ไฟล์ที่แตะ: `backend/app/config.py`, `backend/app/db/session.py`, `backend/tests/conftest.py`
+### T-01 สร้างตาราง slots, bookings, audit_logs
+- รองรับ: CON-TECH-01, DOM-PDPA-01, IF-HIS-01
+- ตรวจด้วย: ไม่มี AC ตรง ๆ เป็นงานพื้นฐานของ task อื่นทุกตัว
+- ไฟล์ที่แตะ: backend/app/config.py, backend/app/db/models.py, backend/app/db/session.py, backend/app/db/migrations/001_init.py, backend/tests/test_T01_schema.py
 - ต้องทำหลัง: ไม่มี
-- เสร็จเมื่อ: ชุดทดสอบสร้าง session ฐานข้อมูล SQLite ในหน่วยความจำได้ และอ่าน `DATABASE_URL` ได้
-- สถานะ: เสร็จ รอทีมตรวจ
+- เสร็จเมื่อ: migration รันผ่าน และตาราง bookings ไม่มีคอลัมน์เลขบัตรประชาชน (national_id)
+- สถานะ: เสร็จ
 
-### T-02 สร้างตารางและ migration
-- รองรับ: CON-TECH-01, DOM-PDPA-01, IF-HIS-01, FR-BKG-01, FR-BKG-02, FR-BKG-04
-- ตรวจด้วย: ไม่มี AC ตรง ๆ เป็นงานพื้นฐานของ T-05, T-08, T-09 และ T-12
-- ไฟล์ที่แตะ: `backend/app/db/models.py`, `backend/app/db/migrations/001_init.py`
-- ต้องทำหลัง: T-01
-- เสร็จเมื่อ: migration สร้างตาราง `slots`, `bookings` และ `audit_logs` โดย `bookings` ไม่มีคอลัมน์เลขบัตรประชาชน
-- สถานะ: พร้อมทำ
-
-### T-03 ตรวจผลยืนยันตัวตนก่อนเข้าถึงข้อมูล
-- รองรับ: IF-IDP-01
-- ตรวจด้วย: ไม่มี AC ตรง ๆ เป็นงานพื้นฐานของ T-05, T-08, T-09 และ T-12
-- ไฟล์ที่แตะ: `backend/app/auth/idp.py`, `backend/app/main.py`
-- ต้องทำหลัง: T-01
-- เสร็จเมื่อ: endpoint ของฟีเจอร์ปฏิเสธคำขอที่ไม่มีผลยืนยันตัวตน และยอมให้คำขอที่ยืนยันแล้วผ่านได้
-- สถานะ: พร้อมทำ
-
-### T-04 ค้น HN จาก HIS
-- รองรับ: IF-HIS-01
-- ตรวจด้วย: ไม่มี AC ตรง ๆ เป็นงานพื้นฐานของ T-08 และ T-09
-- ไฟล์ที่แตะ: `backend/app/his/client.py`, `backend/app/booking/router.py`
-- ต้องทำหลัง: T-01, T-03
-- เสร็จเมื่อ: `GET /patients/lookup` ส่งเลขบัตรไปยัง HIS ได้และคืน HN โดยไม่บันทึกเลขบัตรลงฐานข้อมูล
-- สถานะ: พร้อมทำ
-
-### T-05 คำนวณและแสดงช่วงเวลาว่าง
-- รองรับ: FR-BKG-01, FR-BKG-06, ASM-01, ASM-02
-- ตรวจด้วย: ไม่มี AC ตรง ๆ เป็นงานพื้นฐานของ T-06 และ T-14
-- ไฟล์ที่แตะ: `backend/app/slots/service.py`, `backend/app/slots/router.py`, `backend/app/main.py`
-- ต้องทำหลัง: T-02, T-03
-- เสร็จเมื่อ: `GET /slots` คืนช่วงเวลาภายใน 30 วันพร้อม `remaining` และคำนวณใหม่เมื่อเปลี่ยน `package_code`
-- สถานะ: พร้อมทำ
-
-### T-06 ทดสอบประสิทธิภาพการค้นหาช่วงเวลา
-- รองรับ: NFR-PERF-01
-- ตรวจด้วย: AC-BKG-05
-- ไฟล์ที่แตะ: `backend/tests/test_AC_BKG_05.py`
-- ต้องทำหลัง: T-05
-- เสร็จเมื่อ: `test_AC_BKG_05` ยิงคำขอจำลองพร้อมกัน 200 รายการและตรวจค่า p95 ไม่เกิน 2 วินาที
-- สถานะ: พร้อมทำ
-
-### T-07 บันทึกการจองและตัดที่นั่งแบบอะตอมิก
-- รองรับ: FR-BKG-04, IF-IDP-01, IF-HIS-01, ASM-02
-- ตรวจด้วย: ไม่มี AC ตรง ๆ เป็นงานพื้นฐานของ T-08 และ T-11
-- ไฟล์ที่แตะ: `backend/app/booking/service.py`, `backend/app/booking/router.py`, `backend/tests/test_booking_service.py`
-- ต้องทำหลัง: T-02, T-03, T-04, T-05
-- เสร็จเมื่อ: การจองและการลด `remaining` สำเร็จหรือ rollback พร้อมกันภายใน transaction เดียว
-- สถานะ: พร้อมทำ
-
-### T-08 ออกหมายเลขคิวและทดสอบการจองสำเร็จ
-- รองรับ: FR-BKG-04, ASM-02, Q-02
-- ตรวจด้วย: AC-BKG-01
-- ไฟล์ที่แตะ: `backend/app/booking/service.py`, `backend/app/booking/router.py`, `backend/tests/test_AC_BKG_01.py`
-- ต้องทำหลัง: T-07
-- เสร็จเมื่อ: หลังทีมตอบ `Q-02` แล้ว `test_AC_BKG_01` ตรวจการบันทึก การแสดงหมายเลขคิว และ `remaining` เป็น 0 ได้
-- สถานะ: รอ Q-02
-
-### T-09 ป้องกันการจองซ้ำในวันเดียวกัน
-- รองรับ: FR-BKG-02, ASM-02
-- ตรวจด้วย: AC-BKG-02
-- ไฟล์ที่แตะ: `backend/app/booking/service.py`, `backend/app/booking/router.py`, `backend/tests/test_AC_BKG_02.py`
-- ต้องทำหลัง: T-07
-- เสร็จเมื่อ: `test_AC_BKG_02` ตรวจว่าการจองซ้ำถูกปฏิเสธและคืนหมายเลขคิวเดิมได้
-- สถานะ: พร้อมทำ
-
-### T-10 เสนอช่วงเวลาใกล้เคียงเมื่อเต็ม
-- รองรับ: FR-BKG-03, ASM-02
-- ตรวจด้วย: AC-BKG-03
-- ไฟล์ที่แตะ: `backend/app/slots/service.py`, `backend/app/booking/service.py`, `backend/app/booking/router.py`, `backend/tests/test_AC_BKG_03.py`
-- ต้องทำหลัง: T-05, T-07
-- เสร็จเมื่อ: `test_AC_BKG_03` ตรวจคำตอบ 409 ที่มี 3 ช่วงใกล้ที่สุดในวันเดียวกันหรือวันถัดไป และไม่มี booking ซ้อน
-- สถานะ: พร้อมทำ
-
-### T-11 วางงานแจ้งเตือนและส่งซ้ำแบบ asynchronous
-- รองรับ: FR-BKG-05, IF-NOT-01, NFR-REL-02, ASM-03
-- ตรวจด้วย: AC-BKG-04
-- ไฟล์ที่แตะ: `backend/app/notify/queue.py`, `backend/app/booking/service.py`, `backend/tests/test_AC_BKG_04.py`
-- ต้องทำหลัง: T-07
-- เสร็จเมื่อ: `test_AC_BKG_04` ตรวจว่าการจองไม่รอผลส่งข้อความ มีงานส่งซ้ำภายใน 5 นาที และยังแสดงหมายเลขคิวได้
-- สถานะ: รอ Q-02
-
-### T-12 บันทึก audit log การเข้าถึงข้อมูล
-- รองรับ: DOM-PDPA-01, IF-IDP-01
-- ตรวจด้วย: AC-BKG-06
-- ไฟล์ที่แตะ: `backend/app/audit/middleware.py`, `backend/app/main.py`, `backend/tests/test_AC_BKG_06.py`
-- ต้องทำหลัง: T-02, T-03, T-04
-- เสร็จเมื่อ: `test_AC_BKG_06` ตรวจ audit log ที่มีผู้เข้าถึง เวลา และ HN และมีอายุเก็บรักษาไม่น้อยกว่า 1 ปี
-- สถานะ: พร้อมทำ
-
-### T-13 บังคับใช้การรับส่งข้อมูลด้วย TLS
-- รองรับ: NFR-SEC-01
-- ตรวจด้วย: ไม่มี AC ตรง ๆ เป็นงานพื้นฐานของการเปิดใช้งาน API ตามแผน
-- ไฟล์ที่แตะ: `backend/app/config.py`, `backend/app/main.py`
-- ต้องทำหลัง: T-01
-- เสร็จเมื่อ: การตั้งค่า deployment/API กำหนดให้การรับส่งข้อมูลใช้ TLS 1.2 ขึ้นไป และมีการตรวจการตั้งค่านี้ได้
-- สถานะ: พร้อมทำ
-
-### T-14 สร้างหน้าเลือกแพ็กเกจและช่วงเวลา
+### T-02 สร้าง API ค้นช่วงเวลาว่าง GET /slots
 - รองรับ: FR-BKG-01, FR-BKG-06
-- ตรวจด้วย: ไม่มี AC ตรง ๆ เป็นงานพื้นฐานของ T-15 และ T-18
-- ไฟล์ที่แตะ: `frontend/src/pages/SlotPicker.jsx`, `frontend/src/api/client.js`, `frontend/src/App.jsx`
-- ต้องทำหลัง: ไม่มี
-- เสร็จเมื่อ: หน้าจอจำลองแสดงวัน ช่วงเวลา ที่นั่งคงเหลือ และโหลดช่วงเวลาใหม่เมื่อเปลี่ยนแพ็กเกจได้
-- สถานะ: เสร็จ รอทีมตรวจ
+- ตรวจด้วย: AC-BKG-05
+- ไฟล์ที่แตะ: backend/app/slots/router.py, backend/app/slots/service.py, backend/app/main.py, backend/tests/conftest.py, backend/tests/test_AC_BKG_05.py
+- ต้องทำหลัง: T-01
+- เสร็จเมื่อ: test_AC_BKG_05 ผ่านที่ 200 คำขอแบบย่อส่วน
+- สถานะ: เสร็จ
 
-### T-15 สร้างหน้ายืนยันและแสดงช่วงเวลาเต็ม
-- รองรับ: FR-BKG-03, FR-BKG-04
-- ตรวจด้วย: AC-BKG-03
-- ไฟล์ที่แตะ: `frontend/src/pages/ConfirmBooking.jsx`, `frontend/src/api/client.js`, `frontend/src/App.jsx`
-- ต้องทำหลัง: T-14
-- เสร็จเมื่อ: หน้าจอจำลองส่งการยืนยันได้ และเมื่อได้ 409 แสดงข้อความช่วงเวลาเต็มพร้อมตัวเลือก 3 ช่วง
+### T-03 สร้าง API จองคิว POST /bookings
+- รองรับ: FR-BKG-04, IF-IDP-01
+- ตรวจด้วย: AC-BKG-01
+- ไฟล์ที่แตะ: backend/app/booking/router.py, backend/app/booking/service.py, backend/app/auth/idp.py, backend/app/main.py, backend/tests/test_AC_BKG_01.py
+- ต้องทำหลัง: T-01, T-02
+- เสร็จเมื่อ: test_AC_BKG_01 ผ่าน
+- สถานะ: เสร็จ
+
+### T-04 กันจองซ้ำวันเดียวกัน
+- รองรับ: FR-BKG-02
+- ตรวจด้วย: AC-BKG-02
+- ไฟล์ที่แตะ: backend/app/booking/service.py, backend/app/booking/router.py, backend/tests/test_AC_BKG_02.py
+- ต้องทำหลัง: T-03
+- เสร็จเมื่อ: test ของ AC-BKG-02 ทั้งหมดผ่าน (รวม test_TC_BKG_02_* ถ้ามี)
 - สถานะ: พร้อมทำ
 
-### T-16 สร้างหน้าผลการจองและการแจ้งเตือนล้มเหลว
-- รองรับ: FR-BKG-04, FR-BKG-05, Q-02
-- ตรวจด้วย: ไม่มี AC ตรง ๆ เป็นงานพื้นฐานของ T-17 และ T-18
-- ไฟล์ที่แตะ: `frontend/src/pages/BookingResult.jsx`, `frontend/src/api/client.js`, `frontend/src/App.jsx`
-- ต้องทำหลัง: T-15
-- เสร็จเมื่อ: หลังทีมตอบ `Q-02` แล้วหน้าจอแสดงหมายเลขคิวเมื่อการจองสำเร็จ แม้การส่งข้อความไม่สำเร็จ
-- สถานะ: รอ Q-02
-
-### T-17 ทดสอบหน้าจอกรณีช่วงเวลาเต็ม
+### T-05 เสนอช่วงเวลาใกล้เคียง 3 ตัวเลือกเมื่อเต็ม
 - รองรับ: FR-BKG-03
 - ตรวจด้วย: AC-BKG-03
-- ไฟล์ที่แตะ: `frontend/src/__tests__/AC-BKG-03.test.jsx`
-- ต้องทำหลัง: T-15
-- เสร็จเมื่อ: `AC-BKG-03.test.jsx` ตรวจข้อความ "ช่วงเวลาเต็ม" และตัวเลือกที่ว่าง 3 ตัวเลือกจาก API จำลอง
+- ไฟล์ที่แตะ: backend/app/slots/service.py, backend/app/booking/router.py, backend/tests/test_AC_BKG_03.py
+- ต้องทำหลัง: T-02, T-03
+- เสร็จเมื่อ: test_AC_BKG_03 ผ่าน
 - สถานะ: พร้อมทำ
 
-### T-18 ต่อหน้าจอกับ API จริง
-- รองรับ: FR-BKG-01, FR-BKG-02, FR-BKG-03, FR-BKG-04, FR-BKG-05, FR-BKG-06, IF-IDP-01
-- ตรวจด้วย: ไม่มี AC ตรง ๆ เป็นงานรวมการทำงานของ T-05, T-07, T-09, T-10 และ T-11
-- ไฟล์ที่แตะ: `frontend/src/api/client.js`, `frontend/src/App.jsx`, `frontend/src/pages/SlotPicker.jsx`, `frontend/src/pages/ConfirmBooking.jsx`, `frontend/src/pages/BookingResult.jsx`
-- ต้องทำหลัง: T-05, T-07, T-09, T-10, T-11, T-14, T-15, T-16
-- เสร็จเมื่อ: หน้าจอเรียก endpoint จริงผ่าน `/api` ได้ครบตั้งแต่เลือกช่วงเวลาจนถึงแสดงผลการจอง
+### T-06 ออกหมายเลขคิวและแสดงบนหน้าจอ
+- รองรับ: FR-BKG-04
+- ตรวจด้วย: AC-BKG-01 (ส่วน "แสดงหมายเลขคิว")
+- ไฟล์ที่แตะ: backend/app/booking/service.py, frontend/src/pages/BookingResult.jsx
+- ต้องทำหลัง: T-03
+- เสร็จเมื่อ: หน้าจอแสดงเลขคิวตามรูปแบบที่กำหนดใน spec
 - สถานะ: รอ Q-02
 
-### T-19 ทดสอบการใช้งานกับผู้ใช้ใหม่
-- รองรับ: NFR-USE-01, ASM-05
-- ตรวจด้วย: ไม่มี AC ตรง ๆ เป็นการตรวจ NFR-USE-01
-- ไฟล์ที่แตะ: `frontend/src/__tests__/usability-NFR-USE-01.md`
-- ต้องทำหลัง: T-18
-- เสร็จเมื่อ: ผลทดสอบอาสาสมัครใหม่ 10 คนแสดงว่ามีอย่างน้อย 8 คนจองสำเร็จภายใน 3 นาทีโดยไม่ขอความช่วยเหลือ
-- สถานะ: รอ Q-02
+### T-07 คิวส่งข้อความ และส่งซ้ำสูงสุด 3 ครั้ง (ASM-03)
+- รองรับ: FR-BKG-05, IF-NOT-01, NFR-REL-02
+- ตรวจด้วย: AC-BKG-04
+- ไฟล์ที่แตะ: backend/app/notify/queue.py, backend/app/booking/service.py, backend/tests/test_AC_BKG_04.py
+- ต้องทำหลัง: T-03
+- เสร็จเมื่อ: test_AC_BKG_04 ผ่าน
+- สถานะ: พร้อมทำ
+
+### T-08 audit log ทุกการเข้าถึงข้อมูลการจอง
+- รองรับ: DOM-PDPA-01
+- ตรวจด้วย: AC-BKG-06
+- ไฟล์ที่แตะ: backend/app/audit/middleware.py, backend/app/main.py, backend/tests/test_AC_BKG_06.py
+- ต้องทำหลัง: T-01, T-03
+- เสร็จเมื่อ: test_AC_BKG_06 ผ่าน
+- สถานะ: พร้อมทำ
+
+### T-09 ค้น HN จากระบบ HIS ก่อนจอง
+- รองรับ: IF-HIS-01
+- ตรวจด้วย: ไม่มี AC ตรง ๆ ตรวจด้วย test_IF_HIS_01 (จำลอง HIS)
+- ไฟล์ที่แตะ: backend/app/his/client.py, backend/tests/test_IF_HIS_01.py
+- ต้องทำหลัง: T-01
+- เสร็จเมื่อ: test_IF_HIS_01 ผ่าน และไม่มีเลขบัตรประชาชนถูกเก็บในฐานข้อมูล
+- สถานะ: พร้อมทำ
+
+### T-10 หน้าจอเลือกแพ็กเกจและช่วงเวลา
+- รองรับ: FR-BKG-01, FR-BKG-06
+- ตรวจด้วย: ไม่มี AC ตรง ๆ (FR-BKG-06 ยังไม่มี AC)
+- ไฟล์ที่แตะ: frontend/src/pages/SlotPicker.jsx, frontend/src/App.jsx, frontend/src/__tests__/SlotPicker.test.jsx
+- ต้องทำหลัง: ไม่มี (ใช้ API จำลอง)
+- เสร็จเมื่อ: test หน้าจอ: เปลี่ยนแพ็กเกจแล้วรายการช่วงเวลาเปลี่ยนตาม
+- สถานะ: พร้อมทำ
+
+### T-11 หน้าจอยืนยัน และแจ้ง "ช่วงเวลาเต็ม" พร้อม 3 ตัวเลือก
+- รองรับ: FR-BKG-03
+- ตรวจด้วย: AC-BKG-03
+- ไฟล์ที่แตะ: frontend/src/pages/ConfirmBooking.jsx, frontend/src/__tests__/AC-BKG-03.test.jsx
+- ต้องทำหลัง: T-10
+- เสร็จเมื่อ: AC-BKG-03.test.jsx ผ่าน
+- สถานะ: พร้อมทำ
+
+### T-12 ต่อหน้าจอกับ API จริง
+- รองรับ: FR-BKG-01, FR-BKG-03
+- ตรวจด้วย: AC-BKG-03
+- ไฟล์ที่แตะ: frontend/src/api/client.js, frontend/src/pages/SlotPicker.jsx, frontend/src/pages/ConfirmBooking.jsx
+- ต้องทำหลัง: T-02, T-05, T-11
+- เสร็จเมื่อ: หน้าจอเรียก API จริง และ test ทั้งหลังบ้านและหน้าจอของ AC-BKG-03 ผ่าน
+- สถานะ: พร้อมทำ
+
+---
 
 ## ตารางตรวจความครบ
 
-### Acceptance Criteria
-
 | AC ID | task ที่ตรวจ AC นี้ |
 |---|---|
-| AC-BKG-01 | T-08 |
-| AC-BKG-02 | T-09 |
-| AC-BKG-03 | T-10, T-15, T-17 |
-| AC-BKG-04 | T-11 |
-| AC-BKG-05 | T-06 |
-| AC-BKG-06 | T-12 |
-
-### Constraints
+| AC-BKG-01 | T-03, T-06 |
+| AC-BKG-02 | T-04 |
+| AC-BKG-03 | T-05, T-11, T-12 |
+| AC-BKG-04 | T-07 |
+| AC-BKG-05 | T-02 |
+| AC-BKG-06 | T-08 |
 
 | Constraint ID | task ที่ทำให้เป็นจริง |
 |---|---|
-| CON-TECH-01 | T-01, T-02 |
-| DOM-PDPA-01 | T-02, T-12 |
-| IF-IDP-01 | T-03, T-07, T-12, T-18 |
-| IF-HIS-01 | T-01, T-02, T-04, T-07 |
-| IF-NOT-01 | T-11 |
+| CON-TECH-01 | T-01 |
+| DOM-PDPA-01 | T-01 (ตาราง audit_logs), T-08 |
+| IF-IDP-01 | T-03 |
+| IF-HIS-01 | T-01, T-09 |
+| IF-NOT-01 | T-07 |
 
 ## สิ่งที่ยังไม่ทำ
 
-- Q-02 หมายเลขคิวรีเซ็ตรายวัน หรือนับต่อเนื่อง และมีรูปแบบอย่างไร (เช่น `A001`) -> ถามเจ้าหน้าที่เวชระเบียน
-  task ที่รออยู่: T-08, T-11, T-16, T-18, T-19
+- Q-02 หมายเลขคิวรีเซ็ตรายวัน หรือนับต่อเนื่อง และมีรูปแบบอย่างไร (เช่น A001)? -> ถามเจ้าหน้าที่เวชระเบียน
+  task ที่รอ: T-06

@@ -1,57 +1,52 @@
-"""Shared database fixtures for backend tests."""
-
-import os
-from collections.abc import Generator
+# เตรียมฐานข้อมูล SQLite ในหน่วยความจำให้ทุก test (ไม่ต้องมี PostgreSQL จริง)
+from datetime import date, time, timedelta
 
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
-from sqlalchemy.engine import Engine
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.config import get_settings
-from app.db.session import create_session_factory
+from app.db.models import Base, Slot
+from app.db.session import get_db
+from app.main import app
+
+# ผู้รับบริการที่ยืนยันตัวตนแล้ว HN 0001234
+AUTH = {"Authorization": "Bearer verified:0001234"}
 
 
 @pytest.fixture
-def database_url(monkeypatch: pytest.MonkeyPatch) -> str:
-    # รองรับ CON-TECH-01 โดยแยกฐานข้อมูลทดสอบจาก PostgreSQL ของระบบจริง
-    """Configure SQLite for tests while production reads DATABASE_URL."""
-    url = "sqlite+pysqlite:///:memory:"
-    monkeypatch.setenv("DATABASE_URL", url)
-    return url
-
-
-@pytest.fixture
-def database_engine(database_url: str) -> Generator[Engine, None, None]:
-    # รองรับ CON-TECH-01 และเตรียม session สำหรับข้อมูลตาม IF-HIS-01
-    """Create a shared in-memory SQLite engine for one test."""
+def db():
     engine = create_engine(
-        get_settings().database_url,
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-        future=True,
+        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
     )
-    try:
-        yield engine
-    finally:
-        engine.dispose()
+    Base.metadata.create_all(engine)
+    session = sessionmaker(bind=engine, autoflush=False)()
+    yield session
+    session.close()
 
 
 @pytest.fixture
-def db_session(database_engine: Engine) -> Generator[Session, None, None]:
-    # รองรับ CON-TECH-01 และการเตรียม session สำหรับ IF-HIS-01
-    """Provide a transaction-ready SQLAlchemy session for backend tests."""
-    session = create_session_factory(database_engine)()
-    try:
-        yield session
-    finally:
-        session.rollback()
-        session.close()
+def client(db):
+    app.dependency_overrides[get_db] = lambda: db
+    yield TestClient(app)
+    app.dependency_overrides.clear()
 
 
-def test_database_session_fixture(db_session: Session, database_url: str) -> None:
-    """Verify T-01 can read DATABASE_URL and create a SQLite session."""
-    assert os.environ["DATABASE_URL"] == database_url
-    assert db_session.bind is not None
-    assert db_session.bind.url.database == ":memory:"
+@pytest.fixture
+def make_slot(db):
+    """สร้างช่วงเวลา 1 ช่วง ค่าเริ่มต้นคือพรุ่งนี้ 09.00 น. แพ็กเกจ BASIC"""
+    def _make(start="09:00", remaining=1, capacity=None, days_from_today=1, package_code="BASIC"):
+        h, m = map(int, start.split(":"))
+        slot = Slot(
+            slot_date=date.today() + timedelta(days=days_from_today),
+            start_time=time(h, m),
+            package_code=package_code,
+            capacity=capacity if capacity is not None else max(remaining, 1),
+            remaining=remaining,
+        )
+        db.add(slot)
+        db.commit()
+        db.refresh(slot)
+        return slot
+    return _make

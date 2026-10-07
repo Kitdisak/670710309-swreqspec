@@ -1,31 +1,17 @@
-"""SQLAlchemy engine and session factories."""
-
-from collections.abc import Generator
-
+# สร้าง engine และ session ของฐานข้อมูล (CON-TECH-01)
 from sqlalchemy import create_engine
-from sqlalchemy.engine import Engine
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 
-from app.config import Settings, get_settings
+from app.config import DATABASE_URL
 
-
-def create_database_engine(settings: Settings | None = None) -> Engine:
-    """Create an engine for the PostgreSQL URL required by CON-TECH-01."""
-    active_settings = settings or get_settings()
-    return create_engine(active_settings.database_url, future=True)
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(bind=engine, autoflush=False)
 
 
-def create_session_factory(engine: Engine) -> sessionmaker[Session]:
-    # รองรับ CON-TECH-01 และการเตรียม session สำหรับ IF-HIS-01
-    """Create sessions that can be used by the booking data layer."""
-    return sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
-
-
-def get_db_session() -> Generator[Session, None, None]:
-    # รองรับ CON-TECH-01 และการเข้าถึงข้อมูลผู้รับบริการตาม IF-HIS-01
-    """Yield and close a database session for future API dependencies."""
-    session = create_session_factory(create_database_engine())()
+def get_db():
+    """ส่ง session ให้ API แต่ละตัว แล้วปิดเมื่อจบ"""
+    db = SessionLocal()
     try:
-        yield session
+        yield db
     finally:
-        session.close()
+        db.close()
